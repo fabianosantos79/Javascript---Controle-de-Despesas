@@ -9,12 +9,19 @@ const inputTransactionAmount = document.querySelector('#amount');
 //console.log({inputTransactionName, inputTransactionAmount});
 
 
-const dummyTransactions = [
-    {id : 1, name : 'Bolo de Brigadeiro', amount : -20 }, 
-    {id : 2, name : 'Salário', amount : 300 }, 
-    {id : 3, name : 'Torta de Frango', amount : -10 }, 
-    {id : 4, name : 'Violão', amount : 150 } 
-];
+
+
+const localStorageTransaction = JSON.parse(localStorage.getItem('transactions'))
+
+let transactions = localStorage
+    .getItem('transactions') != null ? localStorageTransaction : []
+
+const removeTransaction = ID => {
+    transactions = transactions
+    .filter(transaction => transaction.id !== ID)
+    updateLocalStorage()
+    init()
+}
 
 const addTransactionIntoDOM = transaction => {
     const operator = transaction.amount < 0 ? '-' : '+';
@@ -25,13 +32,15 @@ const addTransactionIntoDOM = transaction => {
     li.classList.add(cssClass);
 
     li.innerHTML = `
-        ${transaction.name} <span>${operator} R$ ${amountWithoutOperator}</span><button class="delete-btn">x</button>
+        ${transaction.name} <span>${operator} R$ ${amountWithoutOperator}</span><button class="delete-btn" onClick="removeTransaction(${transaction.id})">
+        x
+        </button>
     `
     transactionsUl.prepend(li);
 }
 
 const updateBalanceValues = () => {
-    const transactionAmounts = dummyTransactions.map(valor => valor.amount)
+    const transactionAmounts = transactions.map(valor => valor.amount)
     const total = transactionAmounts
         .reduce((accumulator, transaction) => accumulator + transaction, 0)
         .toFixed(2);
@@ -50,11 +59,15 @@ const updateBalanceValues = () => {
 
 const init = () => {
     transactionsUl.innerHTML = ''
-    dummyTransactions.forEach(addTransactionIntoDOM);
+    transactions.forEach(addTransactionIntoDOM);
     updateBalanceValues();
 }
 
 init();
+
+const updateLocalStorage = () => {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+}
 
 const generateId = () => Math.round(Math.random() * 100);
 
@@ -72,12 +85,17 @@ form.addEventListener('submit', e => {
         return;
     }
 
-    const transaction = {id: generateId(), name: transactionName, amount: Number(transactionAmount)};
+    const transaction = {
+        id: generateId(),
+        name: transactionName,
+        amount: Number(transactionAmount)
+    }
 
-    dummyTransactions.push(transaction);
-    init();
+    transactions.push(transaction)
+    init()
+    updateLocalStorage()
 
-    transactionName = '0';
-    transactionAmount = '0';
+    inputTransactionName.value = '';
+    inputTransactionAmount.value = '';
     }
 )
